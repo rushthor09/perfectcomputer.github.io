@@ -543,6 +543,39 @@
       margin-top: 8px;
     }
 
+    /* ── MAP ── */
+    .map-wrap {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,.12);
+      box-shadow: 0 8px 32px rgba(0,0,0,.3);
+      margin-top: 48px;
+    }
+    .map-wrap iframe {
+      display: block;
+      width: 100%;
+      height: 320px;
+      border: none;
+    }
+    .map-label {
+      background: rgba(255,255,255,.06);
+      border-top: 1px solid rgba(255,255,255,.1);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: rgba(255,255,255,.7);
+    }
+    .map-label a {
+      color: var(--teal);
+      text-decoration: none;
+      font-weight: 600;
+      margin-left: auto;
+      font-size: 13px;
+    }
+    .map-label a:hover { text-decoration: underline; }
+
     /* ── FOOTER ── */
     footer {
       background: #060f22;
@@ -849,20 +882,41 @@
         </div>
       </div>
       <div class="reveal">
-        <form class="contact-form" id="contactForm" onsubmit="handleSubmit(event)">
+        <!--
+          ════════════════════════════════════════════
+          SETUP: Get your free access key from
+          https://web3forms.com  (enter your email)
+          Then replace YOUR_ACCESS_KEY_HERE below.
+          Submissions will be emailed to you instantly.
+          ════════════════════════════════════════════
+        -->
+        <form
+          class="contact-form"
+          id="contactForm"
+          action="https://api.web3forms.com/submit"
+          method="POST"
+          onsubmit="handleSubmit(event)">
+
+          <!-- Web3Forms access key — replace with yours -->
+          <input type="hidden" name="access_key" value="YOUR_ACCESS_KEY_HERE" />
+          <!-- Customise the email subject line -->
+          <input type="hidden" name="subject" value="New Enquiry – Perfect Computer & CCTV Solution" />
+          <!-- Redirect off (we show our own success message) -->
+          <input type="hidden" name="redirect" value="false" />
+
           <div class="form-row">
             <div class="form-group">
               <label>Your Name</label>
-              <input type="text" placeholder="Rahul Shah" required />
+              <input type="text" name="name" placeholder="Rahul Shah" required />
             </div>
             <div class="form-group">
               <label>Phone Number</label>
-              <input type="tel" placeholder="+91 98765 43210" />
+              <input type="tel" name="phone" placeholder="+91 98765 43210" />
             </div>
           </div>
           <div class="form-group">
             <label>Service Needed</label>
-            <select>
+            <select name="service" required>
               <option value="">Select a service…</option>
               <option>Computer Repair</option>
               <option>CCTV Installation</option>
@@ -873,11 +927,28 @@
           </div>
           <div class="form-group">
             <label>Message</label>
-            <textarea placeholder="Describe your issue or requirement…"></textarea>
+            <textarea name="message" placeholder="Describe your issue or requirement…"></textarea>
           </div>
-          <button type="submit" class="btn-submit">Send Message →</button>
+          <button type="submit" class="btn-submit" id="submitBtn">Send Message →</button>
           <div id="form-success">✅ Message sent! We'll contact you shortly.</div>
+          <div id="form-error" style="display:none;background:rgba(255,80,80,.12);border:1px solid rgba(255,80,80,.4);border-radius:10px;padding:16px 20px;color:#ff7070;font-size:15px;margin-top:8px;">
+            ❌ Something went wrong. Please call us directly at +91 63516 61471.
+          </div>
         </form>
+      </div>
+    </div>
+    <!-- Map -->
+    <div class="map-wrap reveal">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3726.4!2d72.9635!3d20.7677!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be0ef82b366029d%3A0xe7c01d8ac3f6de01!2sPerfect%20Computer%20And%20Cctv%20Solution!5e0!3m2!1sen!2sin!4v1715000000000"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        title="Perfect Computer And CCTV Solution Location">
+      </iframe>
+      <div class="map-label">
+        📍 G5A Laxmi Palace, Station Road, Bilimora – 396321
+        <a href="https://maps.app.goo.gl/49B7q2ugQLYuria79" target="_blank" rel="noopener">Open in Google Maps →</a>
       </div>
     </div>
   </div>
@@ -917,12 +988,34 @@
   }, { threshold: 0.12 });
   reveals.forEach(r => io.observe(r));
 
-  // Form submit mock
-  function handleSubmit(e) {
+  // Form submit via Web3Forms
+  async function handleSubmit(e) {
     e.preventDefault();
-    document.getElementById('form-success').style.display = 'block';
-    e.target.reset();
-    setTimeout(() => document.getElementById('form-success').style.display = 'none', 5000);
+    const btn = document.getElementById('submitBtn');
+    const successEl = document.getElementById('form-success');
+    const errorEl   = document.getElementById('form-error');
+    successEl.style.display = 'none';
+    errorEl.style.display   = 'none';
+    btn.textContent = 'Sending…';
+    btn.disabled = true;
+    try {
+      const res  = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: new FormData(e.target)
+      });
+      const data = await res.json();
+      if (data.success) {
+        successEl.style.display = 'block';
+        e.target.reset();
+        setTimeout(() => successEl.style.display = 'none', 6000);
+      } else {
+        errorEl.style.display = 'block';
+      }
+    } catch {
+      errorEl.style.display = 'block';
+    }
+    btn.textContent = 'Send Message →';
+    btn.disabled = false;
   }
 </script>
 </body>
